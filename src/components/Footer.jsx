@@ -7,9 +7,6 @@ export default function Footer() {
       <Typography variant="body2" sx={{ fontWeight: 500 }}>
         &copy; {new Date().getFullYear()} E-Commerce App. All rights reserved.
       </Typography>
-      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-       Testing Pull Request
-      </Typography>
       <Box sx={{ mt: 1 }}>
         <Link href="/" underline="hover" sx={{ color: '#457B9D', mx: 1 }}>
           Home
@@ -17,7 +14,8 @@ export default function Footer() {
         <Link href="/seller" underline="hover" sx={{ color: '#457B9D', mx: 1 }}>
           Seller Dashboard
         </Link>
-        <Link href="/cart" underline="hover" sx={{ color: '#457B9D', mx: 1 }}>
+     <Typography variant="body2" sx={{ fontWeight: 500 }}>
+      </Typography>    <Link href="/cart" underline="hover" sx={{ color: '#457B9D', mx: 1 }}>
           Cart
         </Link>
         <Link href="/wishlist" underline="hover" sx={{ color: '#457B9D', mx: 1 }}>
