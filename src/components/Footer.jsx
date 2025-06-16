@@ -15,7 +15,6 @@ export default function Footer() {
           Seller Dashboard
         </Link>
      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-       Testing Pull Request
       </Typography>    <Link href="/cart" underline="hover" sx={{ color: '#457B9D', mx: 1 }}>
           Cart
         </Link>
