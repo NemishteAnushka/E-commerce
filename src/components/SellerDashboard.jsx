@@ -60,13 +60,11 @@ function setProductsToStorage(products) {
   localStorage.setItem("products", JSON.stringify(products));
 }
 
-
-
 export default function SellerDashboard() {
   const { role } = useRole();
   const user = getCurrentUser();
   const [products, setProductsState] = useState([]);
-  console.log(products,"products")
+  console.log(products, "products");
   const [open, setOpen] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [form, setForm] = useState({
@@ -82,41 +80,41 @@ export default function SellerDashboard() {
   const { showToast } = useToast();
   const [category, setCategory] = useState([]);
 
-  useEffect(()=>{
-async function getCategories(){
-  try{
- const response = await axios.get("http://127.0.0.1:8000/api/categories/")
- setCategory(response.data)
-
-  }catch(error){
-    console.log(error)
-  }
-}
-
-getCategories()
-  },[])
-
-  
   useEffect(() => {
+    async function getCategories() {
+      try {
+        const response = await axios.get(
+          "http://127.0.0.1:8000/api/categories/"
+        );
+        setCategory(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
 
-    const getProductsFromApi = async()=>{
+    getCategories();
+  }, []);
+
+  useEffect(() => {
+    const getProductsFromApi = async () => {
       const authToken = localStorage.getItem("accessToken");
-      try{
-
-        const response = await axios.get("http://127.0.0.1:8000/api/products/",{
+      try {
+        const response = await axios.get(
+          "http://127.0.0.1:8000/api/products/",
+          {
             headers: {
               Authorization: `Bearer ${authToken}`,
             },
-          })
+          }
+        );
 
-          setProductsState(response.data)
-
-      }catch(error){
+        setProductsState(response.data);
+      } catch (error) {
         console.error("Failed to fetch products:", error);
         showToast("Failed to fetch products from server", "error");
       }
-    }
-    getProductsFromApi()
+    };
+    getProductsFromApi();
     // if (role !== "seller" || !user) return;
     // const all = getProducts();
     // setProductsState(all.filter((p) => p.seller === user.username));
@@ -167,21 +165,17 @@ getCategories()
   const handleChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
- const handleImageChange = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  setForm((f) => ({ ...f, imageFile: file })); // save raw file
-};
-
-
-
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setForm((f) => ({ ...f, imageFile: file })); // save raw file
+  };
 
   const handleSave = async () => {
     const authToken = localStorage.getItem("accessToken");
 
-
     let all = getProducts();
-    console.log(all)
+    console.log(all);
     if (
       !form.category ||
       !form.name ||
@@ -213,21 +207,19 @@ getCategories()
     } else {
       // Add
       const formData = new FormData();
-  formData.append('name', form.name);
-  formData.append('price', form.price);
-  formData.append('stock', form.stock);
-  formData.append('category', form.category);
-  formData.append('description', form.description);
-  formData.append('image', form.imageFile);
+      formData.append("name", form.name);
+      formData.append("price", form.price);
+      formData.append("stock", form.stock);
+      formData.append("category", form.category);
+      formData.append("description", form.description);
+      formData.append("image", form.imageFile);
 
       try {
-        await axios.post("http://127.0.0.1:8000/api/products/", formData,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
+        await axios.post("http://127.0.0.1:8000/api/products/", formData, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
         all.push(newProduct);
         setProductsToStorage(all);
         setProductsState(all.filter((p) => p.seller === user.username));
