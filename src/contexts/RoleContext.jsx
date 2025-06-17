@@ -53,5 +53,5 @@ export const RoleProvider = ({ children }) => {
     </RoleContext.Provider>
   );
 };
-
 export const useRole = () => useContext(RoleContext);
+
