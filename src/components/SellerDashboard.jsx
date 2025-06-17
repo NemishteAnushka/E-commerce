@@ -60,24 +60,17 @@ function setProductsToStorage(products) {
   localStorage.setItem("products", JSON.stringify(products));
 }
 
-const categoryOptions = [
-  "Electronics",
-  "Fashion",
-  "Home",
-  "Books",
-  "Clothes",
-  "Food",
-  "Kitchen",
-];
+
 
 export default function SellerDashboard() {
   const { role } = useRole();
   const user = getCurrentUser();
   const [products, setProductsState] = useState([]);
+  console.log(products,"products")
   const [open, setOpen] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [form, setForm] = useState({
-    title: "",
+    name: "",
     description: "",
     price: "",
     stock: "",
@@ -87,11 +80,46 @@ export default function SellerDashboard() {
   const [page, setPage] = useState(1);
   const productsPerPage = 5;
   const { showToast } = useToast();
+  const [category, setCategory] = useState([]);
 
+  useEffect(()=>{
+async function getCategories(){
+  try{
+ const response = await axios.get("http://127.0.0.1:8000/api/categories/")
+ setCategory(response.data)
+
+  }catch(error){
+    console.log(error)
+  }
+}
+
+getCategories()
+  },[])
+
+  
   useEffect(() => {
-    if (role !== "seller" || !user) return;
-    const all = getProducts();
-    setProductsState(all.filter((p) => p.seller === user.username));
+
+    const getProductsFromApi = async()=>{
+      const authToken = localStorage.getItem("accessToken");
+      try{
+
+        const response = await axios.get("http://127.0.0.1:8000/api/products/",{
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          })
+
+          setProductsState(response.data)
+
+      }catch(error){
+        console.error("Failed to fetch products:", error);
+        showToast("Failed to fetch products from server", "error");
+      }
+    }
+    getProductsFromApi()
+    // if (role !== "seller" || !user) return;
+    // const all = getProducts();
+    // setProductsState(all.filter((p) => p.seller === user.username));
   }, [role, user && user.username]);
 
   // Dashboard summary
@@ -121,7 +149,7 @@ export default function SellerDashboard() {
     setEditIndex(idx);
     setForm(
       product || {
-        title: "",
+        name: "",
         description: "",
         price: "",
         stock: "",
@@ -139,28 +167,24 @@ export default function SellerDashboard() {
   const handleChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm((f) => ({ ...f, image: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
+ const handleImageChange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  setForm((f) => ({ ...f, imageFile: file })); // save raw file
+};
 
- 
+
+
 
   const handleSave = async () => {
-   const authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUwMTMzMDUzLCJpYXQiOjE3NTAxMzI3NTMsImp0aSI6ImYxM2YxMGI1N2M3NjRiODY4YmYzOGRlOWQwMGJmNGVjIiwidXNlcl9pZCI6Mn0.unkoCzAKcurXKkgXvVlpw9b1xsCHQGxefoLu1ELwk_k';
-
+    const authToken = localStorage.getItem("accessToken");
 
 
     let all = getProducts();
     console.log(all)
     if (
       !form.category ||
-      !form.title ||
+      !form.name ||
       !form.price ||
       !form.stock ||
       !form.description
@@ -188,26 +212,22 @@ export default function SellerDashboard() {
       handleClose();
     } else {
       // Add
-      const newProduct = {
-        ...form,
-        id: Date.now(),
-        price: parseFloat(form.price),
-        stock: parseInt(form.stock),
-        sold: 0,
-        seller: user.username,
-        category: form.category,
-        description: form.description,
-      };
+      const formData = new FormData();
+  formData.append('name', form.name);
+  formData.append('price', form.price);
+  formData.append('stock', form.stock);
+  formData.append('category', form.category);
+  formData.append('description', form.description);
+  formData.append('image', form.imageFile);
 
       try {
-        await axios.post("http://127.0.0.1:8000/api/products/", newProduct,
-           {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`, 
-          },
-        }
-      );
+        await axios.post("http://127.0.0.1:8000/api/products/", formData,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
         all.push(newProduct);
         setProductsToStorage(all);
         setProductsState(all.filter((p) => p.seller === user.username));
@@ -421,7 +441,7 @@ export default function SellerDashboard() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {products.length === 0 && (
+            {products?.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={7}
@@ -435,7 +455,7 @@ export default function SellerDashboard() {
                 </TableCell>
               </TableRow>
             )}
-            {paginatedProducts.map((p, idx) => (
+            {paginatedProducts?.map((p, idx) => (
               <TableRow
                 key={p.id}
                 sx={{
@@ -444,9 +464,9 @@ export default function SellerDashboard() {
                   cursor: "default",
                 }}
               >
-                <TableCell>{p.title}</TableCell>
+                <TableCell>{p.name}</TableCell>
                 <TableCell>{p.category}</TableCell>
-                <TableCell>${p.price.toFixed(2)}</TableCell>
+                <TableCell>{p.price}</TableCell>
                 <TableCell>{p.stock}</TableCell>
                 <TableCell>{p.sold || 0}</TableCell>
                 <TableCell>{p.stock - (p.sold || 0)}</TableCell>
@@ -511,8 +531,8 @@ export default function SellerDashboard() {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
             <TextField
               label="Name"
-              name="title"
-              value={form.title}
+              name="name"
+              value={form.name}
               onChange={handleChange}
               fullWidth
               required
@@ -554,9 +574,9 @@ export default function SellerDashboard() {
               fullWidth
               required
             >
-              {categoryOptions.map((opt) => (
-                <MenuItem key={opt} value={opt}>
-                  {opt}
+              {category.map((opt) => (
+                <MenuItem key={opt.id} value={opt.id}>
+                  {opt.name}
                 </MenuItem>
               ))}
             </TextField>
