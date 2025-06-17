@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Grid, Box, Typography, Button, CircularProgress, Skeleton, TextField, InputAdornment, IconButton, Popper, Paper, List, ListItem, ListItemText, Fade, Slider as MuiSlider, FormControl, InputLabel, Select, MenuItem, Collapse } from '@mui/material';
+import { Grid, Box, Typography, Button, CircularProgress, Skeleton, TextField, InputAdornment, IconButton, Popper, Paper, List, ListItem, ListItemText, Fade, Slider as MuiSlider, FormControl, InputLabel, Select, MenuItem, Collapse, Alert } from '@mui/material';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -51,11 +51,6 @@ const categories = [
   { name: 'Books', image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80' },
 ];
 
-function getProductsFromLocalStorage() {
-  const products = JSON.parse(localStorage.getItem('products') || '[]');
-  return products.length > 0 ? products : sampleProducts;
-}
-
 // Skeleton loader component for products
 const ProductSkeleton = () => (
   <Box sx={{ p: 1 }}>
@@ -84,6 +79,7 @@ const ProductList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [sortBy, setSortBy] = useState('relevance');
+  const [error, setError] = useState(null);
   const productsPerPage = 12;
   const observer = useRef();
   const searchTimeout = useRef(null);
@@ -152,17 +148,27 @@ const ProductList = () => {
     setAnchorEl(null);
   };
 
-  // Load products from localStorage
+  // Replace the localStorage effect with API fetch
   useEffect(() => {
-    const productsFromStorage = getProductsFromLocalStorage();
-    dispatch(setProducts(productsFromStorage));
-    
-    const interval = setInterval(() => {
-      const productsFromStorage = getProductsFromLocalStorage();
-      dispatch(setProducts(productsFromStorage));
-    }, 1000);
-    
-    return () => clearInterval(interval);
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch('http://127.0.0.1:8000/api/products/');
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+        const data = await response.json();
+        dispatch(setProducts(data));
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, [dispatch]);
 
   // Reset state when filters change
@@ -267,6 +273,19 @@ const ProductList = () => {
         <Typography variant="h6" color="error">
           Please log in as a buyer to view products
         </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button variant="contained" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
       </Box>
     );
   }
@@ -451,7 +470,7 @@ const ProductList = () => {
               fontSize: { xs: 28, sm: 34, md: 42 },
             }}
           >
-            Welcome to Our Store
+            Welcome to Our Store.
           </Typography>
           <Typography
             sx={{
