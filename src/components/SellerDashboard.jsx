@@ -213,6 +213,7 @@ export default function SellerDashboard() {
       formData.append("category", form.category);
       formData.append("description", form.description);
       formData.append("image", form.imageFile);
+      formData.append("is_active",true)
 
       try {
         await axios.post("http://127.0.0.1:8000/api/products/", formData, {
@@ -220,7 +221,7 @@ export default function SellerDashboard() {
             Authorization: `Bearer ${authToken}`,
           },
         });
-        all.push(newProduct);
+        all.push(formData);
         setProductsToStorage(all);
         setProductsState(all.filter((p) => p.seller === user.username));
         showToast("Product added successfully", "success");
