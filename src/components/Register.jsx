@@ -7,6 +7,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginSuccess, loginFailure } from '../slices/userSlice';
 import { useToast } from '../contexts/ToastContext';
+import axios from 'axios';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -28,7 +29,7 @@ export default function Register() {
   const reduxError = useSelector(state => state.user.error);
   const { showToast } = useToast();
 
-  const handleRegister = (e) => {
+  const handleRegister = async(e) => {
     e.preventDefault();
     setUsernameError('');
     setPasswordError('');
@@ -77,7 +78,19 @@ export default function Register() {
       showToast('Username already exists', 'error');
       return;
     }
-    const newUser = { username, password, role, fullName, email, phone };
+    const newUser = { username, password, role,  email,  };
+    console.log(newUser,"ghhhh")
+
+    try{
+await axios.post("http://127.0.0.1:8000/api/register/",newUser,{
+   headers: {
+            "Content-Type": "application/json",
+          },
+})
+    }catch(error){
+ console.error("Failed to post product:", error);
+        showToast("Failed to add product to server", "error");
+    }
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
     showToast('Registration successful! Please login to continue.', 'success');

@@ -1,41 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-  Typography, Button, Box, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  Grid, MenuItem, IconButton, Pagination, Card, CardContent, CardHeader,
-  Avatar, Tooltip, Divider
-} from '@mui/material';
-import { useRole } from '../contexts/RoleContext';
-import DashboardSummaryCard from './DashboardSummaryCard';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import { useToast } from '../contexts/ToastContext';
+  Typography,
+  Button,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Grid,
+  MenuItem,
+  IconButton,
+  Pagination,
+  Card,
+  CardContent,
+  CardHeader,
+  Avatar,
+  Tooltip,
+  Divider,
+} from "@mui/material";
+import { useRole } from "../contexts/RoleContext";
+import DashboardSummaryCard from "./DashboardSummaryCard";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import { useToast } from "../contexts/ToastContext";
+import axios from "axios";
 
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip as RechartTooltip,
-  ResponsiveContainer, CartesianGrid
-} from 'recharts';
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip as RechartTooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 
 function getCurrentUser() {
-  return JSON.parse(localStorage.getItem('currentUser'));
+  return JSON.parse(localStorage.getItem("currentUser"));
 }
 
 function getProducts() {
-  return JSON.parse(localStorage.getItem('products') || '[]');
+  return JSON.parse(localStorage.getItem("products") || "[]");
 }
-
 function setProductsToStorage(products) {
-  localStorage.setItem('products', JSON.stringify(products));
+  localStorage.setItem("products", JSON.stringify(products));
 }
 
 const categoryOptions = [
-  'Electronics', 'Fashion', 'Home', 'Books', 'Clothes', 'Food', 'Kitchen'
+  "Electronics",
+  "Fashion",
+  "Home",
+  "Books",
+  "Clothes",
+  "Food",
+  "Kitchen",
 ];
 
 export default function SellerDashboard() {
@@ -44,15 +76,22 @@ export default function SellerDashboard() {
   const [products, setProductsState] = useState([]);
   const [open, setOpen] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
-  const [form, setForm] = useState({ title: '', description: '', price: '', stock: '', image: '', category: '' });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    stock: "",
+    image: "",
+    category: "",
+  });
   const [page, setPage] = useState(1);
   const productsPerPage = 5;
   const { showToast } = useToast();
 
   useEffect(() => {
-    if (role !== 'seller' || !user) return;
+    if (role !== "seller" || !user) return;
     const all = getProducts();
-    setProductsState(all.filter(p => p.seller === user.username));
+    setProductsState(all.filter((p) => p.seller === user.username));
   }, [role, user && user.username]);
 
   // Dashboard summary
@@ -62,14 +101,17 @@ export default function SellerDashboard() {
 
   // Chart data for graph
   const chartData = [
-    { name: 'Total Products', value: totalProducts },
-    { name: 'Total Sold', value: totalSold },
-    { name: 'In Stock', value: totalStock },
+    { name: "Total Products", value: totalProducts },
+    { name: "Total Sold", value: totalSold },
+    { name: "In Stock", value: totalStock },
   ];
 
   // Pagination
   const totalPages = Math.ceil(products.length / productsPerPage);
-  const paginatedProducts = products.slice((page - 1) * productsPerPage, page * productsPerPage);
+  const paginatedProducts = products.slice(
+    (page - 1) * productsPerPage,
+    page * productsPerPage
+  );
 
   const handlePageChange = (event, value) => {
     setPage(value);
@@ -77,34 +119,73 @@ export default function SellerDashboard() {
 
   const handleOpen = (product, idx) => {
     setEditIndex(idx);
-    setForm(product || { title: '', description: '', price: '', stock: '', image: '', category: '' });
+    setForm(
+      product || {
+        title: "",
+        description: "",
+        price: "",
+        stock: "",
+        image: "",
+        category: "",
+      }
+    );
     setOpen(true);
   };
-  const handleClose = () => { setOpen(false); setEditIndex(null); };
+  const handleClose = () => {
+    setOpen(false);
+    setEditIndex(null);
+  };
 
-  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleImageChange = e => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      setForm(f => ({ ...f, image: reader.result }));
+      setForm((f) => ({ ...f, image: reader.result }));
     };
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
+ 
+
+  const handleSave = async () => {
+   const authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUwMTMzMDUzLCJpYXQiOjE3NTAxMzI3NTMsImp0aSI6ImYxM2YxMGI1N2M3NjRiODY4YmYzOGRlOWQwMGJmNGVjIiwidXNlcl9pZCI6Mn0.unkoCzAKcurXKkgXvVlpw9b1xsCHQGxefoLu1ELwk_k';
+
+
+
     let all = getProducts();
-    if (!form.category || !form.title || !form.price || !form.stock || !form.description) {
-      showToast('Please fill in all required fields', 'error');
+    console.log(all)
+    if (
+      !form.category ||
+      !form.title ||
+      !form.price ||
+      !form.stock ||
+      !form.description
+    ) {
+      showToast("Please fill in all required fields", "error");
       return;
     }
+
     if (editIndex !== null) {
       // Edit
-      const idx = all.findIndex(p => p.seller === user.username && p.id === products[editIndex].id);
-      all[idx] = { ...all[idx], ...form, price: parseFloat(form.price), stock: parseInt(form.stock), category: form.category, description: form.description };
-      showToast('Product updated successfully', 'success');
+      const idx = all.findIndex(
+        (p) => p.seller === user.username && p.id === products[editIndex].id
+      );
+      all[idx] = {
+        ...all[idx],
+        ...form,
+        price: parseFloat(form.price),
+        stock: parseInt(form.stock),
+        category: form.category,
+        description: form.description,
+      };
+      showToast("Product updated successfully", "success");
+      setProductsToStorage(all);
+      setProductsState(all.filter((p) => p.seller === user.username));
+      handleClose();
     } else {
       // Add
       const newProduct = {
@@ -115,27 +196,51 @@ export default function SellerDashboard() {
         sold: 0,
         seller: user.username,
         category: form.category,
-        description: form.description
+        description: form.description,
       };
-      all.push(newProduct);
-      showToast('Product added successfully', 'success');
+
+      try {
+        await axios.post("http://127.0.0.1:8000/api/products/", newProduct,
+           {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`, 
+          },
+        }
+      );
+        all.push(newProduct);
+        setProductsToStorage(all);
+        setProductsState(all.filter((p) => p.seller === user.username));
+        showToast("Product added successfully", "success");
+        handleClose();
+      } catch (error) {
+        console.error("Failed to post product:", error);
+        showToast("Failed to add product to server", "error");
+      }
     }
-    setProductsToStorage(all);
-    setProductsState(all.filter(p => p.seller === user.username));
-    handleClose();
   };
 
-  const handleDelete = idx => {
+  const handleDelete = (idx) => {
     let all = getProducts();
     const productToDelete = products[idx];
-    all = all.filter(p => !(p.seller === user.username && p.id === products[idx].id));
+    all = all.filter(
+      (p) => !(p.seller === user.username && p.id === products[idx].id)
+    );
     setProductsToStorage(all);
-    setProductsState(all.filter(p => p.seller === user.username));
-    showToast(`${productToDelete.title} deleted successfully`, 'info');
+    setProductsState(all.filter((p) => p.seller === user.username));
+    showToast(`${productToDelete.title} deleted successfully`, "info");
   };
 
   return (
-    <Box sx={{ maxWidth: 1280, mx: 'auto', p: 4, bgcolor: '#f4f6f8', minHeight: '100vh' }}>
+    <Box
+      sx={{
+        maxWidth: 1280,
+        mx: "auto",
+        p: 4,
+        bgcolor: "#f4f6f8",
+        minHeight: "100vh",
+      }}
+    >
       <Typography variant="h4" fontWeight={700} color="#1565c0" gutterBottom>
         Seller Dashboard
       </Typography>
@@ -146,12 +251,24 @@ export default function SellerDashboard() {
       {/* Summary Cards */}
       <Grid container spacing={3} mb={5}>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ display: 'flex', alignItems: 'center', bgcolor: 'white', boxShadow: 3, borderRadius: 3 }}>
-            <Avatar sx={{ bgcolor: '#1e88e5', m: 2, width: 56, height: 56 }}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "white",
+              boxShadow: 3,
+              borderRadius: 3,
+            }}
+          >
+            <Avatar sx={{ bgcolor: "#1e88e5", m: 2, width: 56, height: 56 }}>
               <StorefrontIcon fontSize="large" />
             </Avatar>
             <CardContent>
-              <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                fontWeight={600}
+              >
                 Total Products
               </Typography>
               <Typography variant="h5" fontWeight={700} color="#1565c0">
@@ -161,12 +278,24 @@ export default function SellerDashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ display: 'flex', alignItems: 'center', bgcolor: 'white', boxShadow: 3, borderRadius: 3 }}>
-            <Avatar sx={{ bgcolor: '#43a047', m: 2, width: 56, height: 56 }}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "white",
+              boxShadow: 3,
+              borderRadius: 3,
+            }}
+          >
+            <Avatar sx={{ bgcolor: "#43a047", m: 2, width: 56, height: 56 }}>
               <ShoppingCartIcon fontSize="large" />
             </Avatar>
             <CardContent>
-              <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                fontWeight={600}
+              >
                 Total Sold
               </Typography>
               <Typography variant="h5" fontWeight={700} color="#2e7d32">
@@ -176,12 +305,24 @@ export default function SellerDashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ display: 'flex', alignItems: 'center', bgcolor: 'white', boxShadow: 3, borderRadius: 3 }}>
-            <Avatar sx={{ bgcolor: '#fb8c00', m: 2, width: 56, height: 56 }}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "white",
+              boxShadow: 3,
+              borderRadius: 3,
+            }}
+          >
+            <Avatar sx={{ bgcolor: "#fb8c00", m: 2, width: 56, height: 56 }}>
               <InventoryIcon fontSize="large" />
             </Avatar>
             <CardContent>
-              <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                fontWeight={600}
+              >
                 In Stock
               </Typography>
               <Typography variant="h5" fontWeight={700} color="#ef6c00">
@@ -193,18 +334,28 @@ export default function SellerDashboard() {
       </Grid>
 
       {/* Bar Chart Card */}
-      <Card sx={{ mb: 5, boxShadow: 4, borderRadius: 3, bgcolor: 'white' }}>
+      <Card sx={{ mb: 5, boxShadow: 4, borderRadius: 3, bgcolor: "white" }}>
         <CardHeader
           avatar={<BarChartIcon color="primary" />}
-          title={<Typography variant="h6" fontWeight={700} color="#1565c0">Sales Overview</Typography>}
-          sx={{ borderBottom: '1px solid #eee' }}
+          title={
+            <Typography variant="h6" fontWeight={700} color="#1565c0">
+              Sales Overview
+            </Typography>
+          }
+          sx={{ borderBottom: "1px solid #eee" }}
         />
         <CardContent sx={{ height: 320 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fill: '#1565c0', fontWeight: '600' }} />
-              <YAxis allowDecimals={false} tick={{ fill: '#1565c0' }} />
+              <XAxis
+                dataKey="name"
+                tick={{ fill: "#1565c0", fontWeight: "600" }}
+              />
+              <YAxis allowDecimals={false} tick={{ fill: "#1565c0" }} />
               <RechartTooltip />
               <Bar dataKey="value" fill="#1565c0" radius={[6, 6, 0, 0]} />
             </BarChart>
@@ -213,19 +364,28 @@ export default function SellerDashboard() {
       </Card>
 
       {/* Products Section */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" fontWeight={700} color="#1565c0">Your Products</Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography variant="h5" fontWeight={700} color="#1565c0">
+          Your Products
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddCircleOutlineIcon />}
           sx={{
-            bgcolor: '#1565c0',
-            color: '#fff',
+            bgcolor: "#1565c0",
+            color: "#fff",
             fontWeight: 700,
             borderRadius: 3,
             px: 3,
             py: 1.2,
-            '&:hover': { bgcolor: '#0d47a1' }
+            "&:hover": { bgcolor: "#0d47a1" },
           }}
           onClick={() => handleOpen(null, null)}
         >
@@ -235,22 +395,43 @@ export default function SellerDashboard() {
 
       <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 4 }}>
         <Table sx={{ minWidth: 700 }} aria-label="products table">
-          <TableHead sx={{ bgcolor: '#e3f2fd' }}>
+          <TableHead sx={{ bgcolor: "#e3f2fd" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700, color: '#0d47a1' }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0d47a1' }}>Category</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0d47a1' }}>Price</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0d47a1' }}>Stock</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0d47a1' }}>Sold</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0d47a1' }}>Remaining</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#0d47a1' }}>Actions</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: "#0d47a1" }}>
+                Name
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700, color: "#0d47a1" }}>
+                Category
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700, color: "#0d47a1" }}>
+                Price
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700, color: "#0d47a1" }}>
+                Stock
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700, color: "#0d47a1" }}>
+                Sold
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700, color: "#0d47a1" }}>
+                Remaining
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700, color: "#0d47a1" }}>
+                Actions
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ color: '#999', fontSize: 18, py: 5 }}>
-                  <InfoOutlinedIcon sx={{ mr: 1, verticalAlign: 'middle', color: '#1976d2' }} /> No products found. Click "Add New Product" to get started.
+                <TableCell
+                  colSpan={7}
+                  align="center"
+                  sx={{ color: "#999", fontSize: 18, py: 5 }}
+                >
+                  <InfoOutlinedIcon
+                    sx={{ mr: 1, verticalAlign: "middle", color: "#1976d2" }}
+                  />{" "}
+                  No products found. Click "Add New Product" to get started.
                 </TableCell>
               </TableRow>
             )}
@@ -258,9 +439,9 @@ export default function SellerDashboard() {
               <TableRow
                 key={p.id}
                 sx={{
-                  '&:nth-of-type(odd)': { bgcolor: '#f9fafd' },
-                  '&:hover': { bgcolor: '#e3f2fd' },
-                  cursor: 'default'
+                  "&:nth-of-type(odd)": { bgcolor: "#f9fafd" },
+                  "&:hover": { bgcolor: "#e3f2fd" },
+                  cursor: "default",
                 }}
               >
                 <TableCell>{p.title}</TableCell>
@@ -271,12 +452,20 @@ export default function SellerDashboard() {
                 <TableCell>{p.stock - (p.sold || 0)}</TableCell>
                 <TableCell>
                   <Tooltip title="Edit Product">
-                    <IconButton color="primary" onClick={() => handleOpen(p, idx)} size="small">
+                    <IconButton
+                      color="primary"
+                      onClick={() => handleOpen(p, idx)}
+                      size="small"
+                    >
                       <EditIcon />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Delete Product">
-                    <IconButton color="error" onClick={() => handleDelete(idx)} size="small">
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDelete(idx)}
+                      size="small"
+                    >
                       <DeleteIcon />
                     </IconButton>
                   </Tooltip>
@@ -288,22 +477,22 @@ export default function SellerDashboard() {
       </TableContainer>
 
       {totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <Pagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
             sx={{
-              '& .MuiPaginationItem-root': {
+              "& .MuiPaginationItem-root": {
                 fontWeight: 700,
-                color: '#1565c0',
-                '&.Mui-selected': {
-                  backgroundColor: '#1565c0',
-                  color: '#fff',
-                  '&:hover': { backgroundColor: '#0d47a1' }
-                }
-              }
+                color: "#1565c0",
+                "&.Mui-selected": {
+                  backgroundColor: "#1565c0",
+                  color: "#fff",
+                  "&:hover": { backgroundColor: "#0d47a1" },
+                },
+              },
             }}
           />
         </Box>
@@ -316,46 +505,107 @@ export default function SellerDashboard() {
         PaperProps={{ sx: { borderRadius: 3, p: 2, minWidth: 420 } }}
       >
         <DialogTitle fontWeight={700} color="#1565c0">
-          {editIndex !== null ? 'Edit Product' : 'Add Product'}
+          {editIndex !== null ? "Edit Product" : "Add Product"}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
-            <TextField label="Name" name="title" value={form.title} onChange={handleChange} fullWidth required />
-            <TextField label="Description" name="description" value={form.description} onChange={handleChange} fullWidth multiline rows={3} required />
-            <TextField label="Price" name="price" type="number" value={form.price} onChange={handleChange} fullWidth required />
-            <TextField label="Stock" name="stock" type="number" value={form.stock} onChange={handleChange} fullWidth required />
-            <TextField select label="Category" name="category" value={form.category} onChange={handleChange} fullWidth required>
-              {categoryOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
+            <TextField
+              label="Name"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Description"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              fullWidth
+              multiline
+              rows={3}
+              required
+            />
+            <TextField
+              label="Price"
+              name="price"
+              type="number"
+              value={form.price}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Stock"
+              name="stock"
+              type="number"
+              value={form.stock}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+            <TextField
+              select
+              label="Category"
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              fullWidth
+              required
+            >
+              {categoryOptions.map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
             </TextField>
             <Box>
-              <Typography variant="body2" color="text.secondary" mb={1}>Upload Image</Typography>
-              <input type="file" accept="image/*" onChange={handleImageChange} />
+              <Typography variant="body2" color="text.secondary" mb={1}>
+                Upload Image
+              </Typography>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
               {form.image && (
                 <Box
                   component="img"
                   src={form.image}
                   alt="Preview"
-                  sx={{ mt: 1, width: 96, height: 96, objectFit: 'cover', borderRadius: 2, border: '1px solid #ddd' }}
+                  sx={{
+                    mt: 1,
+                    width: 96,
+                    height: 96,
+                    objectFit: "cover",
+                    borderRadius: 2,
+                    border: "1px solid #ddd",
+                  }}
                 />
               )}
             </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleClose} variant="outlined" sx={{ borderRadius: 2 }}>
+          <Button
+            onClick={handleClose}
+            variant="outlined"
+            sx={{ borderRadius: 2 }}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             variant="contained"
             sx={{
-              bgcolor: '#1565c0',
-              color: '#fff',
+              bgcolor: "#1565c0",
+              color: "#fff",
               fontWeight: 700,
               borderRadius: 2,
               px: 3,
               py: 1.2,
-              '&:hover': { bgcolor: '#0d47a1' }
+              "&:hover": { bgcolor: "#0d47a1" },
             }}
           >
             Save

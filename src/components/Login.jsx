@@ -26,46 +26,90 @@ export default function Login() {
   const reduxError = useSelector(state => state.user.error);
   const { showToast } = useToast();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    let valid = true;
-    setUsernameError('');
-    setPasswordError('');
-    setError('');
-    if (!username) {
-      setUsernameError('Username is required');
-      valid = false;
-    }
-    if (!password) {
-      setPasswordError('Password is required');
-      valid = false;
-    } else if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-      valid = false;
-    }
-    if (!valid) return;
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find(u => u.username === username && u.password === password);
-    if (!user) {
-      setError('Invalid credentials');
-      dispatch(loginFailure('Invalid credentials'));
-      showToast('Invalid credentials', 'error');
+
+const handleLogin = async (e) => {
+  e.preventDefault();
+  let valid = true;
+  setUsernameError('');
+  setPasswordError('');
+  setError('');
+
+  if (!username) {
+    setUsernameError('Username is required');
+    valid = false;
+  }
+  if (!password) {
+    setPasswordError('Password is required');
+    valid = false;
+  } else if (password.length < 6) {
+    setPasswordError('Password must be at least 6 characters');
+    valid = false;
+  }
+
+  if (!valid) return;
+
+  try {
+    const tokenResponse = await fetch('http://127.0.0.1:8000/api/token/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (!tokenResponse.ok) {
+      const { detail } = await tokenResponse.json();
+      setError(detail || 'Login failed');
+      dispatch(loginFailure(detail || 'Login failed'));
+      showToast(detail || 'Login failed', 'error');
       return;
     }
+
+    const tokenData = await tokenResponse.json(); // { access, refresh }
+    const { access, refresh } = tokenData;
+
+    localStorage.setItem('accessToken', access);
+    localStorage.setItem('refreshToken', refresh);
+
+    // 🔽 Now fetch user details using the access token
+    const userResponse = await fetch('http://127.0.0.1:8000/api/user/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${access}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!userResponse.ok) {
+      throw new Error('Failed to fetch user info');
+    }
+
+    const userData = await userResponse.json(); // Adjust fields as per your API
+    // Map vendor role to seller for consistency
+    const normalizedRole = userData.role === 'vendor' ? 'seller' : userData.role;
+    const user = {
+      username: userData.username,
+      role: normalizedRole,
+      type: normalizedRole
+    };
+console.log("user",user)
+    localStorage.setItem('currentUser', JSON.stringify(user));
     loginAs(user.role);
-    localStorage.setItem('currentUser', JSON.stringify({
-      ...user,
-      type: user.role
-    }));
-    dispatch(loginSuccess({ 
-      username: user.username, 
-      role: user.role,
-      type: user.role
-    }));
+    dispatch(loginSuccess(user));
     dispatch(loadUserCart({ username: user.username }));
+
     showToast(`Welcome back, ${user.username}!`, 'success');
-    window.location.href = user.role === 'seller' ? '/seller' : '/';
-  };
+    navigate(user.role === 'vendor' ? '/seller' : '/');
+navigate(user.role === "customer" ? "/buyer" : "/");
+  } catch (err) {
+    console.error('Login error:', err);
+    setError('An unexpected error occurred.');
+    dispatch(loginFailure('An unexpected error occurred.'));
+    showToast('An unexpected error occurred.', 'error');
+  }
+};
+
+
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'linear-gradient(120deg, #e3eaeb 0%, #b7d6ee 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', px: { xs: 1, sm: 0 } }}>

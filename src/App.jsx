@@ -121,6 +121,16 @@ export default function App() {
                 <SearchResults />
               </PageWithBackButton>
             } />
+            <Route path="/buyer" element={
+              <RequireRole role="buyer">
+                <ProductList />
+              </RequireRole>
+            } />
+            {/* <Route path="/buyer" element={
+              <RequireRole role="customer">
+                <ProductList />
+              </RequireRole>
+            } /> */}
             <Route path="/" element={
               <RequireRole role="buyer">
                 <ProductList />

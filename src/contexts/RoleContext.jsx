@@ -12,8 +12,8 @@ function fakeJwtDecode(token) {
 
 // Define available roles
 export const ROLES = {
-  SELLER: 'seller',
-  BUYER: 'buyer',
+  SELLER: 'vendor',
+  BUYER: 'customer',
 };
 
 // Create context
