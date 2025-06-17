@@ -261,7 +261,7 @@ const ProductList = () => {
     }
   }, [dispatch, currentUser, isInitialLoad]);
 
-  if (!user || user.role !== 'buyer') {
+  if (!user || user.role !== 'customer') {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography variant="h6" color="error">

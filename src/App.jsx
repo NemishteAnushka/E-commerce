@@ -85,7 +85,7 @@ export default function App() {
               </PageWithBackButton>
             } />
             <Route path="/seller" element={
-              <RequireRole role="seller">
+              <RequireRole role="vendor">
                 <SellerDashboard />
               </RequireRole>
             } />
@@ -122,17 +122,7 @@ export default function App() {
               </PageWithBackButton>
             } />
             <Route path="/buyer" element={
-              <RequireRole role="buyer">
-                <ProductList />
-              </RequireRole>
-            } />
-            {/* <Route path="/buyer" element={
               <RequireRole role="customer">
-                <ProductList />
-              </RequireRole>
-            } /> */}
-            <Route path="/" element={
-              <RequireRole role="buyer">
                 <ProductList />
               </RequireRole>
             } />

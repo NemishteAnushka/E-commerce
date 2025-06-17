@@ -69,7 +69,7 @@ const handleLogin = async (e) => {
     const { access, refresh } = tokenData;
 
     localStorage.setItem('accessToken', access);
-    localStorage.setItem('refreshToken', refresh);
+    // localStorage.setItem('refreshToken', refresh);
 
     // 🔽 Now fetch user details using the access token
     const userResponse = await fetch('http://127.0.0.1:8000/api/user/', {
@@ -85,12 +85,13 @@ const handleLogin = async (e) => {
     }
 
     const userData = await userResponse.json(); // Adjust fields as per your API
+    console.log("userData",userData)
     // Map vendor role to seller for consistency
-    const normalizedRole = userData.role === 'vendor' ? 'seller' : userData.role;
+    // const normalizedRole = userData.role === 'vendor' ? 'seller' : userData.role;
     const user = {
       username: userData.username,
-      role: normalizedRole,
-      type: normalizedRole
+      role: userData.role,
+      type: userData.role
     };
 console.log("user",user)
     localStorage.setItem('currentUser', JSON.stringify(user));
@@ -99,8 +100,14 @@ console.log("user",user)
     dispatch(loadUserCart({ username: user.username }));
 
     showToast(`Welcome back, ${user.username}!`, 'success');
-    navigate(user.role === 'vendor' ? '/seller' : '/');
-navigate(user.role === "customer" ? "/buyer" : "/");
+    if (user.role === 'vendor') {
+      navigate('/seller');
+    } else if (user.role === 'customer') {
+      navigate('/buyer');
+    } else {
+      navigate('/');
+    }
+
   } catch (err) {
     console.error('Login error:', err);
     setError('An unexpected error occurred.');
