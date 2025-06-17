@@ -470,7 +470,7 @@ const ProductList = () => {
               fontSize: { xs: 28, sm: 34, md: 42 },
             }}
           >
-            Welcome to Our Store
+            Welcome to Our Store.
           </Typography>
           <Typography
             sx={{
