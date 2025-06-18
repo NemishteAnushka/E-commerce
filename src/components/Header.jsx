@@ -78,7 +78,7 @@ export default function Header() {
           <Typography variant="h6" sx={{ flexGrow: 1, cursor: 'pointer', color: '#457B9D', fontWeight: 700 }} onClick={() => navigate('/')}>E-Commerce App</Typography>
           {/* Desktop icons */}
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-            {role === 'buyer' && (
+            {role === 'customer' && (
               <>
                 <IconButton color="inherit" onClick={() => navigate('/cart')}>
                   <Badge badgeContent={cartCount} color="error">
@@ -92,7 +92,7 @@ export default function Header() {
                 </IconButton>
               </>
             )}
-            {role === 'seller' && (
+            {role === 'vendor' && (
               <>
                 <IconButton color="inherit" onClick={() => navigate('/seller/products')}>
                   <StoreIcon />
