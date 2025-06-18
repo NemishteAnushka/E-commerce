@@ -464,7 +464,7 @@ const handleSave = async () => {
                 }}
               >
                 <TableCell>{p.name}</TableCell>
-                <TableCell>{p.category}</TableCell>
+                <TableCell>{p.category_name}</TableCell>
                 <TableCell>{p.price}</TableCell>
                 <TableCell>{p.stock}</TableCell>
                 <TableCell>{p.sold || 0}</TableCell>
