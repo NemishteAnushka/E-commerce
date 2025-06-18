@@ -480,7 +480,7 @@ const ProductList = () => {
               lineHeight: 1.5,
             }}
           >
-            Browse our collection of products and find what you need
+            Browse our collection of products and find what you need.
           </Typography>
         </Box>
 
