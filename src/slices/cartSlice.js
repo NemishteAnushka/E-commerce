@@ -1,4 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { cartService } from '../services/cartService';
 
 // Helper functions for localStorage
 const getCartFromStorage = (username) => {
@@ -39,11 +40,78 @@ const saveWishlistToStorage = (username, wishlist) => {
   }
 };
 
+// Async thunks
+export const fetchCart = createAsyncThunk(
+  'products/fetchCart',
+  async () => {
+    const response = await cartService.getCart();
+    console.log('Cart API Response:', response); // Debug log
+    return response;
+  }
+);
+
+export const addToCartAsync = createAsyncThunk(
+  'products/addToCart',
+  async ({ productId, quantity }, { dispatch }) => {
+    try {
+      // First get the product details to check stock
+      const productResponse = await cartService.addToCart(productId, quantity);
+      console.log('Add to Cart API Response:', productResponse); // Debug log
+      
+      // After successful add, fetch the updated cart
+      const cartResponse = await cartService.getCart();
+      console.log('Updated Cart after adding item:', cartResponse); // Debug log
+      
+      return cartResponse; // Return the updated cart data
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
+export const removeFromCartAsync = createAsyncThunk(
+  'products/removeFromCart',
+  async (cartItemId) => {
+    try {
+      // Remove the cart item
+      await cartService.removeFromCart(cartItemId);
+      
+      // After successful removal, fetch the updated cart
+      const cartResponse = await cartService.getCart();
+      console.log('Updated Cart after removing item:', cartResponse); // Debug log
+      
+      return cartResponse; // Return the updated cart data
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
+export const updateCartItemAsync = createAsyncThunk(
+  'products/updateCartItem',
+  async ({ cartItemId, quantity }) => {
+    try {
+      // Update the cart item
+      await cartService.updateCartItem(cartItemId, quantity);
+      
+      // After successful update, fetch the updated cart
+      const cartResponse = await cartService.getCart();
+      console.log('Updated Cart after updating item:', cartResponse); // Debug log
+      
+      return cartResponse; // Return the updated cart data
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
 const initialState = {
   items: [], // products with seller information
   cart: [],
   wishlist: [],
   currentUser: null, // Add current user to track who is logged in
+  loading: false,
+  error: null
 };
 
 const productsSlice = createSlice({
@@ -155,6 +223,65 @@ const productsSlice = createSlice({
       state.currentUser = null;
     },
   },
+  extraReducers: (builder) => {
+    builder
+      // Fetch Cart
+      .addCase(fetchCart.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCart.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log('Setting cart in Redux:', action.payload); // Debug log
+        state.cart = action.payload;
+      })
+      .addCase(fetchCart.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      // Add to Cart
+      .addCase(addToCartAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addToCartAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log('Setting updated cart in Redux:', action.payload); // Debug log
+        state.cart = action.payload; // Set the entire updated cart
+      })
+      .addCase(addToCartAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      // Remove from Cart
+      .addCase(removeFromCartAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removeFromCartAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log('Setting updated cart in Redux:', action.payload); // Debug log
+        state.cart = action.payload; // Set the entire updated cart
+      })
+      .addCase(removeFromCartAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      // Update Cart Item
+      .addCase(updateCartItemAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateCartItemAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log('Setting updated cart in Redux:', action.payload); // Debug log
+        state.cart = action.payload; // Set the entire updated cart
+      })
+      .addCase(updateCartItemAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
+  }
 });
 
 export const {

@@ -118,6 +118,13 @@ export default function Checkout() {
           <Typography variant="h6" sx={{ color: 'text.secondary' }}>
             Your order has been placed successfully.
           </Typography>
+          <Button
+            variant="contained"
+            sx={{ mt: 4, bgcolor: '#457B9D', color: '#fff', '&:hover': { bgcolor: '#35607a' } }}
+            onClick={() => navigate('/buyer')}
+          >
+            Continue to Shopping
+          </Button>
         </Box>
       </Fade>
     );

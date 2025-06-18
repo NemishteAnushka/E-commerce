@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { addToCart, addToWishlist } from '../slices/cartSlice';
+import { addToCartAsync, addToWishlist } from '../slices/cartSlice';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useToast } from '../contexts/ToastContext';
 
@@ -15,25 +15,43 @@ export default function ProductCard({ product }) {
   const image = product.image || 'https://via.placeholder.com/150';
   const remaining = product.stock - (product.sold || 0);
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
+    const token = localStorage.getItem('accessToken');
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     
-    if (!currentUser) {
+    if (!token || !currentUser) {
       showToast('Please login to add items to cart', 'warning');
       navigate('/login');
       return;
     }
 
-    dispatch(addToCart({ product, username: currentUser.username }));
-    showToast('Added to cart', 'success');
+    if (remaining <= 0) {
+      showToast('Sorry, this product is out of stock', 'error');
+      return;
+    }
+
+    try {
+      await dispatch(addToCartAsync({ productId: product.id, quantity: 1 })).unwrap();
+      showToast('Added to cart', 'success');
+    } catch (error) {
+      if (error.message?.includes('Authentication')) {
+        showToast('Your session has expired. Please login again.', 'error');
+        navigate('/login');
+      } else if (error.message?.includes('Not enough stock')) {
+        showToast(error.message, 'error');
+      } else {
+        showToast(error.message || 'Failed to add to cart', 'error');
+      }
+    }
   };
 
   const handleAddToWishlist = (e) => {
     e.stopPropagation();
+    const token = localStorage.getItem('accessToken');
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     
-    if (!currentUser) {
+    if (!token || !currentUser) {
       showToast('Please login to add items to wishlist', 'warning');
       navigate('/login');
       return;

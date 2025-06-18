@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Box, Typography, Grid, TextField, InputAdornment, IconButton, FormControl, InputLabel, Select, MenuItem, Slider, Paper, Collapse } from '@mui/material';
@@ -9,7 +9,20 @@ import ClearIcon from '@mui/icons-material/Clear';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
 function getProductsFromLocalStorage() {
-  return JSON.parse(localStorage.getItem('products') || '[]');
+  try {
+    const products = JSON.parse(localStorage.getItem('products') || '[]');
+    // Ensure each product has the required fields
+    return products.map(product => ({
+      ...product,
+      category: product.category || '',
+      title: product.title || product.name || '',
+      description: product.description || '',
+      price: Number(product.price) || 0
+    }));
+  } catch (error) {
+    console.error('Error parsing products from localStorage:', error);
+    return [];
+  }
 }
 
 export default function ProductByCategory() {
@@ -21,7 +34,7 @@ export default function ProductByCategory() {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [sortBy, setSortBy] = useState('relevance');
 
-  React.useEffect(() => {
+  useEffect(() => {
     const productsFromStorage = getProductsFromLocalStorage();
     dispatch(setProducts(productsFromStorage));
   }, [dispatch]);
@@ -29,8 +42,8 @@ export default function ProductByCategory() {
   // Get min and max prices from products
   const productPriceRange = products.reduce(
     (acc, product) => ({
-      min: Math.min(acc.min, product.price),
-      max: Math.max(acc.max, product.price),
+      min: Math.min(acc.min, Number(product.price) || 0),
+      max: Math.max(acc.max, Number(product.price) || 0),
     }),
     { min: Infinity, max: -Infinity }
   );
@@ -47,25 +60,37 @@ export default function ProductByCategory() {
 
   // Filter and sort products
   const filteredProducts = products
-    .filter((p) => 
-      p.category && 
-      p.category.toLowerCase() === categoryName.toLowerCase() &&
-      (searchTerm === '' || 
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      p.price >= priceRange[0] &&
-      p.price <= priceRange[1]
-    )
+    .filter((p) => {
+      const category = String(p.category || '').toLowerCase();
+      const searchTermLower = searchTerm.toLowerCase();
+      const title = String(p.title || p.name || '').toLowerCase();
+      const description = String(p.description || '').toLowerCase();
+      const price = Number(p.price) || 0;
+
+      return (
+        category === categoryName.toLowerCase() &&
+        (searchTerm === '' || 
+          title.includes(searchTermLower) ||
+          description.includes(searchTermLower)) &&
+        price >= priceRange[0] &&
+        price <= priceRange[1]
+      );
+    })
     .sort((a, b) => {
+      const priceA = Number(a.price) || 0;
+      const priceB = Number(b.price) || 0;
+      const titleA = String(a.title || a.name || '');
+      const titleB = String(b.title || b.name || '');
+
       switch (sortBy) {
         case 'price-asc':
-          return a.price - b.price;
+          return priceA - priceB;
         case 'price-desc':
-          return b.price - a.price;
+          return priceB - priceA;
         case 'name-asc':
-          return a.title.localeCompare(b.title);
+          return titleA.localeCompare(titleB);
         case 'name-desc':
-          return b.title.localeCompare(a.title);
+          return titleB.localeCompare(titleA);
         default:
           return 0;
       }
