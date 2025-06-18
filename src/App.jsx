@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Container, Box } from '@mui/material';
 import Header from './components/Header';
@@ -19,6 +19,8 @@ import ProductByCategory from './components/ProductByCategory';
 import Wishlist from './components/Wishlist';
 import BackButton from './components/BackButton';
 import SearchResults from './components/SearchResults';
+import AdminPage from './components/AdminPage';
+import axios from 'axios';
 
 function RoleSwitcher() {
   const { role, loginAs, logout } = useRole();
@@ -49,6 +51,14 @@ const PageWithBackButton = ({ children }) => {
     </Box>
   );
 };
+
+// useEffect(()=>{
+//   const adminUser = async() => {
+//     const response = await axios.get('http://127.0.0.1:8000/api/user/');
+//     console.log(response.data)
+//   }
+//   ad
+// },[])
 
 export default function App() {
   return (
@@ -83,6 +93,11 @@ export default function App() {
               <PageWithBackButton>
                 <ResetPassword />
               </PageWithBackButton>
+            } />
+            <Route path="/admin" element={
+              <RequireRole role="admin">
+                <AdminPage />
+              </RequireRole>
             } />
             <Route path="/seller" element={
               <RequireRole role="vendor">
