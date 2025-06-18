@@ -1,9 +1,8 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Badge, Box, InputBase, alpha, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, Badge, Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import LogoutIcon from '@mui/icons-material/Logout';
-import SearchIcon from '@mui/icons-material/Search';
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import StoreIcon from '@mui/icons-material/Store';
@@ -19,15 +18,8 @@ export default function Header() {
   const { role, logout } = useRole();
   const currentUser = role ? JSON.parse(localStorage.getItem('currentUser')) : null;
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [searchValue, setSearchValue] = React.useState('');
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
-  const handleSearch = (e) => {
-    if (e.key === 'Enter') {
-      navigate(`/search?q=${encodeURIComponent(searchValue)}`);
-      setDrawerOpen(false);
-    }
-  };
 
   // Drawer content for mobile
   const drawer = (
@@ -36,19 +28,6 @@ export default function Header() {
         <ListItem button onClick={() => navigate('/')}> 
           <ListItemIcon><HomeIcon /></ListItemIcon>
           <ListItemText primary="Home" />
-        </ListItem>
-        <ListItem>
-          <InputBase
-            placeholder="Search…"
-            inputProps={{ 'aria-label': 'search' }}
-            sx={{ pl: 1, pr: 1, width: '100%', bgcolor: alpha('#fff', 0.7), borderRadius: 1 }}
-            value={searchValue}
-            onChange={e => setSearchValue(e.target.value)}
-            onKeyDown={handleSearch}
-          />
-          <IconButton size="small" onClick={() => { navigate(`/search?q=${encodeURIComponent(searchValue)}`); setDrawerOpen(false); }}>
-            <SearchIcon sx={{ color: '#457B9D' }} />
-          </IconButton>
         </ListItem>
         {role === 'buyer' && (
           <>
@@ -97,30 +76,6 @@ export default function Header() {
             </IconButton>
           </Box>
           <Typography variant="h6" sx={{ flexGrow: 1, cursor: 'pointer', color: '#457B9D', fontWeight: 700 }} onClick={() => navigate('/')}>E-Commerce App</Typography>
-          {/* Desktop search bar */}
-          <Box sx={{
-            position: 'relative',
-            borderRadius: 2,
-            backgroundColor: alpha('#fff', 0.7),
-            '&:hover': { backgroundColor: alpha('#fff', 0.9) },
-            mr: 2,
-            ml: 2,
-            width: { xs: '100px', sm: '180px', md: '240px' },
-            display: { xs: 'none', sm: 'flex' },
-            alignItems: 'center',
-          }}>
-            <InputBase
-              placeholder="Search…"
-              inputProps={{ 'aria-label': 'search' }}
-              sx={{ pl: 2, pr: 1, width: '100%' }}
-              value={searchValue}
-              onChange={e => setSearchValue(e.target.value)}
-              onKeyDown={handleSearch}
-            />
-            <IconButton size="small" onClick={() => navigate(`/search?q=${encodeURIComponent(searchValue)}`)}>
-              <SearchIcon sx={{ color: '#457B9D', mr: 1 }} />
-            </IconButton>
-          </Box>
           {/* Desktop icons */}
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
             {role === 'buyer' && (
@@ -135,7 +90,6 @@ export default function Header() {
                     <FavoriteBorderIcon />
                   </Badge>
                 </IconButton>
-               
               </>
             )}
             {role === 'seller' && (
