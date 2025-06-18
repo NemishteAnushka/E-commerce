@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -15,25 +15,28 @@ import {
   TableRow,
   TextField,
   Typography,
-  Paper
-} from '@mui/material';
+  Paper,
+} from "@mui/material";
+import axios from "axios";
 
 function AdminPage() {
-  const [categoryName, setCategoryName] = useState('');
-  const [isActive, setIsActive] = useState('yes');
+  const [name, setName] = useState("");
+  const [isActive, setIsActive] = useState("yes");
   const [categories, setCategories] = useState([]);
-    const [errors, setErrors] = useState({});
+  console.log("categories", categories);
+  const [errors, setErrors] = useState({});
 
-
-   const handleSubmit = () => {
+  const handleSubmit = async () => {
     const newErrors = {};
 
-    if (!categoryName.trim()) {
-      newErrors.categoryName = 'Category name is required';
+    if (!name.trim()) {
+      newErrors.name = "Category name is required";
     } else if (
-      categories.some(cat => cat.name.toLowerCase() === categoryName.trim().toLowerCase())
+      categories.some(
+        (cat) => cat.name.toLowerCase() === name.trim().toLowerCase()
+      )
     ) {
-      newErrors.categoryName = 'Category name already exists';
+      newErrors.name = "Category name already exists";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -41,13 +44,51 @@ function AdminPage() {
       return;
     }
 
-    // If no errors
-    setCategories([...categories, { name: categoryName.trim(), active: isActive }]);
-    setCategoryName('');
-    setIsActive('yes');
-    setErrors({});
-  };
+    try {
+      const authToken = localStorage.getItem("accessToken");
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/categories/",
+        {
+          name: name.trim(),
+          is_active: isActive === "yes" ? true : false,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
+      console.log(response.data, "response data");
+
+      // Update categories list with response data (better to use server response than local data)
+      setName("");
+      setIsActive("yes");
+      setErrors({});
+    } catch (error) {
+      // You can add more detailed error handling here
+      console.error("Failed to create category:", error);
+      setErrors({ submit: "Failed to create category. Please try again." });
+    }
+  };
+  useEffect(() => {
+    const authToken = localStorage.getItem("accessToken");
+
+    const getCategories = async () => {
+      const getResponse = await axios.get(
+        "http://127.0.0.1:8000/api/categories/",
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setCategories(getResponse.data);
+    };
+    getCategories();
+  }, []);
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -58,10 +99,10 @@ function AdminPage() {
         <TextField
           label="Category Name"
           variant="outlined"
-          value={categoryName}
-          onChange={(e) => setCategoryName(e.target.value)}
-          error={!!errors.categoryName}
-          helperText={errors.categoryName}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={!!errors.name}
+          helperText={errors.name}
           fullWidth
         />
 
@@ -96,7 +137,9 @@ function AdminPage() {
               <TableRow key={index}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{category.name}</TableCell>
-                <TableCell>{category.active === 'yes' ? 'Yes' : 'No'}</TableCell>
+                <TableCell>
+                  {category.is_active === true ? "Yes" : "No"}
+                </TableCell>
               </TableRow>
             ))}
             {categories.length === 0 && (

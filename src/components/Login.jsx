@@ -114,7 +114,9 @@ export default function Login() {
         navigate("/seller");
       } else if (user.role === "customer") {
         navigate("/buyer");
-      } else {
+      } else if(user.role === "admin"){
+        navigate("/admin");
+      }else {
         navigate("/");
       }
     } catch (err) {
