@@ -38,6 +38,9 @@ import axios from "axios";
 export default function Checkout() {
   const cart = useSelector((state) => state.products.cart);
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  const [showCart, setShowCart] = useState([]);
+  console.log(showCart, "showCart");
   const shipping = 0; // Free shipping
   const tax = total * 0.1; // 10% tax
   const finalTotal = total + shipping + tax;
@@ -70,16 +73,30 @@ export default function Checkout() {
     };
     fetchCountries();
   }, []);
-  // Redirect if cart is empty
+
   useEffect(() => {
-    if (cart.length === 0) {
-      showToast("Your cart is empty", "warning");
-      navigate("/");
-    }
-  }, [cart, navigate, showToast]);
+    const authToken = localStorage.getItem("accessToken");
+    const fetchOrder = async () => {
+      const response = await axios.get("http://127.0.0.1:8000/api/orders/", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setShowCart(response.data);
+    };
+    fetchOrder();
+  }, []);
+  // Redirect if cart is empty
+  // useEffect(() => {
+  //   if (cart.length === 0) {
+  //     showToast("Your cart is empty", "warning");
+  //     // navigate("/");
+  //   }
+  // }, [cart, navigate, showToast]);
 
   const [step, setStep] = useState(0);
-  console.log(step,"step")
+  console.log(step, "step");
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -525,9 +542,7 @@ export default function Checkout() {
                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                         Cash On Delivery
                       </Typography>
-                      
                     </Paper>
-                 
                   </Box>
                 </CardContent>
               </Card>
@@ -592,28 +607,31 @@ export default function Checkout() {
               }}
             >
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 3, color: "#457B9D" }}>
-                  Order Summary
-                </Typography>
-                <Box sx={{ mb: 3 }}>
-                  {cart.map((item) => (
-                    <Box
-                      key={item.id}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        mb: 2,
-                        p: 1,
-                        borderRadius: 1,
-                        "&:hover": {
-                          bgcolor:
-                            "linear-gradient(135deg, #b3e0ea 0%, #5b90a7 100%)",
-                        },
-                      }}
-                    >
-                      <img
-                        src={item.image || "https://via.placeholder.com/60"}
-                        alt={item.title}
+                {showCart.map((items) => (
+                  <>
+                    <Typography variant="h6" sx={{ mb: 3, color: "#457B9D" }}>
+                      Order Summary
+                    </Typography>
+                    <Box sx={{ mb: 3 }}>
+                      {items?.products?.map((product, index) => (
+                        <>
+                          <Box
+                            key={index}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 2,
+                              p: 1,
+                              borderRadius: 1,
+                              "&:hover": {
+                                bgcolor:
+                                  "linear-gradient(135deg, #b3e0ea 0%, #5b90a7 100%)",
+                              },
+                            }}
+                          >
+                            <img
+                              src={`http://127.0.0.1:8000${product.image}`}
+                              alt={product.product_name}
                         style={{
                           width: 60,
                           height: 60,
@@ -621,57 +639,79 @@ export default function Checkout() {
                           borderRadius: 4,
                           marginRight: 12,
                         }}
-                      />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: 600 }}
-                        >
-                          {item.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Qty: {item.qty} × ${item.price}
+                            />
+                            <Box sx={{ flex: 1 }}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ fontWeight: 600 }}
+                              >
+                                {product.product_name}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Qty: {product.quantity} × ${product.price}
+                              </Typography>
+                            </Box>
+                              {/* <Typography
+                                variant="subtitle2"
+                                sx={{ fontWeight: 600, color: "#457B9D" }}
+                              >
+                                ${(product.price * product.quantity).toFixed(2)}
+                              </Typography> */}
+                          </Box>
+                        </>
+                      ))}
+                    </Box>
+                    <Divider sx={{ my: 2 }} />
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Typography>Subtotal</Typography>
+                        <Typography>${items?.subtotal_amount}</Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Typography>Shipping</Typography>
+                        <Typography sx={{ color: "success.main" }}>
+                          Free
                         </Typography>
                       </Box>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ fontWeight: 600, color: "#457B9D" }}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
                       >
-                        ${(item.price * item.qty).toFixed(2)}
-                      </Typography>
+                        <Typography>Tax (10%)</Typography>
+                        <Typography>${items?.total_tax}</Typography>
+                      </Box>
+                      <Divider sx={{ my: 1 }} />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Typography variant="h6">Total</Typography>
+                        <Typography variant="h6" sx={{ color: "#457B9D" }}>
+                          ${items?.final_total}
+                        </Typography>
+                      </Box>
                     </Box>
-                  ))}
-                </Box>
-                <Divider sx={{ my: 2 }} />
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography>Subtotal</Typography>
-                    <Typography>${total.toFixed(2)}</Typography>
-                  </Box>
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography>Shipping</Typography>
-                    <Typography sx={{ color: "success.main" }}>Free</Typography>
-                  </Box>
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography>Tax (10%)</Typography>
-                    <Typography>${tax.toFixed(2)}</Typography>
-                  </Box>
-                  <Divider sx={{ my: 1 }} />
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="h6">Total</Typography>
-                    <Typography variant="h6" sx={{ color: "#457B9D" }}>
-                      ${finalTotal.toFixed(2)}
-                    </Typography>
-                  </Box>
-                </Box>
+                  </>
+                ))}
               </CardContent>
             </Card>
           </Grid>
