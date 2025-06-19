@@ -121,7 +121,7 @@ export default function Checkout() {
 
     if (step === 0 && !validate()) return;
 
-    if (step === 0) {
+    if (step === 2) {
       setLoading(true);
       try {
         // const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -523,30 +523,11 @@ export default function Checkout() {
                       }}
                     >
                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        Credit/Debit Card
+                        Cash On Delivery
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Pay with your credit or debit card
-                      </Typography>
+                      
                     </Paper>
-                    <Paper
-                      elevation={2}
-                      sx={{
-                        p: 2,
-                        cursor: "pointer",
-                        "&:hover": {
-                          bgcolor:
-                            "linear-gradient(135deg, #b3e0ea 0%, #5b90a7 100%)",
-                        },
-                      }}
-                    >
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        PayPal
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Pay with your PayPal account
-                      </Typography>
-                    </Paper>
+                 
                   </Box>
                 </CardContent>
               </Card>
