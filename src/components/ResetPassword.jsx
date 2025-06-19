@@ -1,55 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Paper, InputAdornment, IconButton } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper } from '@mui/material';
 import { useToast } from '../contexts/ToastContext';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  useEffect(() => {
-    // Check if there's a valid reset token
-    const resetToken = JSON.parse(localStorage.getItem('resetToken') || 'null');
-    if (!resetToken || resetToken.expires < Date.now()) {
-      showToast('Password reset link has expired', 'error');
-      navigate('/forgot-password');
-    }
-  }, [navigate, showToast]);
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    const otpData = JSON.parse(localStorage.getItem('resetOtp') || '{}');
+    if (!otpData.email) {
+      setError('No reset request found. Please try again.');
+      showToast('No reset request found. Please try again.', 'error');
+      navigate('/forgot-password');
       return;
     }
-
-    const resetToken = JSON.parse(localStorage.getItem('resetToken'));
+    // Update user password in localStorage
     const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const userIndex = users.findIndex(u => u.username === resetToken.email);
-
+    const userIndex = users.findIndex(u => u.username === otpData.email);
     if (userIndex === -1) {
-      setError('User not found');
+      setError('User not found.');
+      showToast('User not found.', 'error');
+      navigate('/forgot-password');
       return;
     }
-
-    // Update the user's password
     users[userIndex].password = password;
     localStorage.setItem('users', JSON.stringify(users));
-    localStorage.removeItem('resetToken');
-
-    showToast('Password has been reset successfully', 'success');
+    // Clean up OTP
+    localStorage.removeItem('resetOtp');
+    showToast('Password reset successful! Please login.', 'success');
     navigate('/login');
   };
 
@@ -61,41 +52,23 @@ export default function ResetPassword() {
         <form onSubmit={handleSubmit}>
           <TextField
             label="New Password"
-            type={showPassword ? 'text' : 'password'}
+            type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             fullWidth
             sx={{ mb: 2 }}
             size="medium"
-            InputProps={{
-              sx: { fontSize: { xs: 14, sm: 16 } },
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(s => !s)} edge="end">
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
+            InputProps={{ sx: { fontSize: { xs: 14, sm: 16 } } }}
           />
           <TextField
             label="Confirm Password"
-            type={showPassword ? 'text' : 'password'}
+            type="password"
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             fullWidth
             sx={{ mb: 2 }}
             size="medium"
-            InputProps={{
-              sx: { fontSize: { xs: 14, sm: 16 } },
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(s => !s)} edge="end">
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
+            InputProps={{ sx: { fontSize: { xs: 14, sm: 16 } } }}
           />
           {error && <Typography color="error" sx={{ mb: 1, fontSize: { xs: 13, sm: 14 } }}>{error}</Typography>}
           <Button
@@ -117,10 +90,6 @@ export default function ResetPassword() {
           >
             RESET PASSWORD
           </Button>
-          <Typography variant="body2" sx={{ textAlign: 'center', color: '#888', fontSize: { xs: 13, sm: 14 } }}>
-            Remember your password?{' '}
-            <span style={{ color: '#457B9D', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/login')}>Sign In</span>
-          </Typography>
         </form>
       </Paper>
     </Box>

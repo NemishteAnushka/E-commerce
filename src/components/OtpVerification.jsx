@@ -3,51 +3,53 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography, TextField, Button, Paper } from '@mui/material';
 import { useToast } from '../contexts/ToastContext';
 
-export default function ForgotPassword() {
-  const [email, setEmail] = useState('');
+export default function OtpVerification() {
+  const [otpInput, setOtpInput] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { showToast } = useToast();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find(u => u.username === email);
-    
-    if (!user) {
-      setError('No account found with this email');
-      showToast('No account found with this email', 'error');
+    const otpData = JSON.parse(localStorage.getItem('resetOtp') || '{}');
+    if (!otpData.otp || !otpData.email) {
+      setError('No OTP request found. Please try again.');
+      showToast('No OTP request found. Please try again.', 'error');
+      navigate('/forgot-password');
       return;
     }
-
-    // Generate a 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    localStorage.setItem('resetOtp', JSON.stringify({
-      otp,
-      email,
-      expires: Date.now() + 10 * 60 * 1000 // 10 minutes
-    }));
-
-    showToast('OTP sent to your email (simulated)', 'success');
-    navigate('/otp-verification');
+    if (Date.now() > otpData.expires) {
+      setError('OTP expired. Please request a new one.');
+      showToast('OTP expired. Please request a new one.', 'error');
+      navigate('/forgot-password');
+      return;
+    }
+    if (otpInput !== otpData.otp) {
+      setError('Invalid OTP. Please try again.');
+      showToast('Invalid OTP. Please try again.', 'error');
+      return;
+    }
+    // OTP is correct
+    showToast('OTP verified! Please reset your password.', 'success');
+    navigate('/reset-password');
   };
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'linear-gradient(120deg, #e3eaeb 0%, #b7d6ee 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', px: { xs: 1, sm: 0 } }}>
       <Paper elevation={6} sx={{ p: { xs: 2, sm: 4 }, width: { xs: '100%', sm: 370 }, maxWidth: 420, borderRadius: 4, boxShadow: 8, background: 'rgba(255,255,255,0.98)' }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: '#457B9D', letterSpacing: 1, textAlign: 'center', fontSize: { xs: 22, sm: 26 } }}>Forgot Password</Typography>
-        <Typography variant="body2" sx={{ color: '#888', mb: 3, textAlign: 'center', fontSize: { xs: 13, sm: 15 } }}>Enter your email to reset your password</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: '#457B9D', letterSpacing: 1, textAlign: 'center', fontSize: { xs: 22, sm: 26 } }}>OTP Verification</Typography>
+        <Typography variant="body2" sx={{ color: '#888', mb: 3, textAlign: 'center', fontSize: { xs: 13, sm: 15 } }}>Enter the OTP sent to your email</Typography>
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            label="OTP"
+            type="text"
+            value={otpInput}
+            onChange={e => setOtpInput(e.target.value)}
             fullWidth
             sx={{ mb: 2 }}
             autoFocus
             size="medium"
-            InputProps={{ sx: { fontSize: { xs: 14, sm: 16 } } }}
+            InputProps={{ sx: { fontSize: { xs: 14, sm: 16 }, letterSpacing: 4 } }}
           />
           {error && <Typography color="error" sx={{ mb: 1, fontSize: { xs: 13, sm: 14 } }}>{error}</Typography>}
           <Button
@@ -67,12 +69,8 @@ export default function ForgotPassword() {
               '&:hover': { bgcolor: '#35607a' }
             }}
           >
-            SEND OTP
+            VERIFY OTP
           </Button>
-          <Typography variant="body2" sx={{ textAlign: 'center', color: '#888', fontSize: { xs: 13, sm: 14 } }}>
-            Remember your password?{' '}
-            <span style={{ color: '#457B9D', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/login')}>Sign In</span>
-          </Typography>
         </form>
       </Paper>
     </Box>

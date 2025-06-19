@@ -21,6 +21,7 @@ import BackButton from './components/BackButton';
 import SearchResults from './components/SearchResults';
 import AdminPage from './components/AdminPage';
 import axios from 'axios';
+import OtpVerification from './components/OtpVerification';
 
 function RoleSwitcher() {
   const { role, loginAs, logout } = useRole();
@@ -87,6 +88,11 @@ export default function App() {
             <Route path="/forgot-password" element={
               <PageWithBackButton>
                 <ForgotPassword />
+              </PageWithBackButton>
+            } />
+            <Route path="/otp-verification" element={
+              <PageWithBackButton>
+                <OtpVerification />
               </PageWithBackButton>
             } />
             <Route path="/reset-password" element={
