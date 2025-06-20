@@ -39,7 +39,7 @@ export default function Checkout() {
   const cart = useSelector((state) => state.products.cart);
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-  const [showCart, setShowCart] = useState([]);
+  const [showCart, setShowCart] = useState({});
   console.log(showCart, "showCart");
   const shipping = 0; // Free shipping
   const tax = total * 0.1; // 10% tax
@@ -77,7 +77,7 @@ export default function Checkout() {
   useEffect(() => {
     const authToken = localStorage.getItem("accessToken");
     const fetchOrder = async () => {
-      const response = await axios.get("http://127.0.0.1:8000/api/orders/", {
+      const response = await axios.get("http://127.0.0.1:8000/api/order/summary/", {
         headers: {
           Authorization: `Bearer ${authToken}`,
           "Content-Type": "application/json",
@@ -607,13 +607,13 @@ export default function Checkout() {
               }}
             >
               <CardContent>
-                {showCart.map((items) => (
+               
                   <>
                     <Typography variant="h6" sx={{ mb: 3, color: "#457B9D" }}>
                       Order Summary
                     </Typography>
                     <Box sx={{ mb: 3 }}>
-                      {items?.products?.map((product, index) => (
+                      {showCart?.products?.map((product, index) => (
                         <>
                           <Box
                             key={index}
@@ -675,7 +675,7 @@ export default function Checkout() {
                         }}
                       >
                         <Typography>Subtotal</Typography>
-                        <Typography>${items?.subtotal_amount}</Typography>
+                        <Typography>${showCart?.subtotal_amount}</Typography>
                       </Box>
                       <Box
                         sx={{
@@ -695,7 +695,7 @@ export default function Checkout() {
                         }}
                       >
                         <Typography>Tax (10%)</Typography>
-                        <Typography>${items?.total_tax}</Typography>
+                        <Typography>${showCart?.total_tax}</Typography>
                       </Box>
                       <Divider sx={{ my: 1 }} />
                       <Box
@@ -706,12 +706,12 @@ export default function Checkout() {
                       >
                         <Typography variant="h6">Total</Typography>
                         <Typography variant="h6" sx={{ color: "#457B9D" }}>
-                          ${items?.final_total}
+                          ${showCart?.final_total}
                         </Typography>
                       </Box>
                     </Box>
                   </>
-                ))}
+              
               </CardContent>
             </Card>
           </Grid>
