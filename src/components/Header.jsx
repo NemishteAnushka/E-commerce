@@ -16,6 +16,7 @@ export default function Header() {
   const wishlistCount = useSelector(state => state.products.wishlist.length);
   const navigate = useNavigate();
   const { role, logout } = useRole();
+  console.log(role,"role")
   const currentUser = role ? JSON.parse(localStorage.getItem('currentUser')) : null;
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
