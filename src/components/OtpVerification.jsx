@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Typography, TextField, Button, Paper } from "@mui/material";
 import { useToast } from "../contexts/ToastContext";
 import axios from "axios";
-
+axios.defaults.withCredentials = true;
 export default function OtpVerification() {
   const [otpInput, setOtpInput] = useState("");
   console.log(typeof otpInput);
@@ -39,6 +39,8 @@ export default function OtpVerification() {
         "http://127.0.0.1:8000/api/verify-otp/",
         {
           otp: parseInt(otpInput),
+        },{
+          withCredentials: true,
         }
       );
       console.log(response, "res");
@@ -46,6 +48,7 @@ export default function OtpVerification() {
         showToast("OTP verified! Please reset your password.", "success");
         navigate("/reset-password");
       }
+      console.log(document.cookie,"cookie")
     } catch (error) {
       setError("Invalid OTP. Please try again.");
       showToast("Invalid OTP. Please try again.", "error");

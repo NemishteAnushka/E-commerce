@@ -4,6 +4,7 @@ import { Box, Typography, TextField, Button, Paper } from "@mui/material";
 import { useToast } from "../contexts/ToastContext";
 import axios from "axios";
 
+axios.defaults.withCredentials = true;
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -12,14 +13,14 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-//     const users = JSON.parse(localStorage.getItem("users") || "[]");
-//     const user = users.find((u) => u.username === email);
-// console.log(user)
-//     if (!user) {
-//       setError("No account found with this email");
-//       showToast("No account found with this email", "error");
-//       return;
-//     }
+    //     const users = JSON.parse(localStorage.getItem("users") || "[]");
+    //     const user = users.find((u) => u.username === email);
+    // console.log(user)
+    //     if (!user) {
+    //       setError("No account found with this email");
+    //       showToast("No account found with this email", "error");
+    //       return;
+    //     }
 
     // // Generate a 6-digit OTP
     // const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -34,9 +35,11 @@ export default function ForgotPassword() {
       {
         email: email,
       },
-     
+      {
+        withCredentials: true,
+      }
     );
-    console.log("res",response.data)
+    console.log("res", response.data);
 
     if (response.status === 200) {
       showToast("OTP sent to your email (simulated)", "success");
